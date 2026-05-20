@@ -26,7 +26,7 @@ import torch.nn as nn
 from einops.layers.torch import Rearrange
 
 from torch.nn import AvgPool3d
-from timm.models.layers import DropPath, trunc_normal_
+from timm.layers import DropPath, trunc_normal_
 
 
 class Mlp(nn.Module):

@@ -15,7 +15,10 @@ from moftransformer.modules.module import Module
 from moftransformer.utils.validation import (
     get_valid_config,
     get_num_devices,
+    get_trainer_strategy,
+    normalize_precision,
     ConfigurationError,
+    _IS_INTERACTIVE,
 )
 
 warnings.filterwarnings(
@@ -220,20 +223,14 @@ def main(_config):
     dm.setup('test')
     model.eval()
 
-    if _IS_INTERACTIVE:
-        strategy = None
-    elif pl.__version__ >= '2.0.0':
-        strategy = "ddp_find_unused_parameters_true"
-    else:
-        strategy = "ddp"
+    strategy = get_trainer_strategy(_IS_INTERACTIVE)
 
     trainer = pl.Trainer(
         accelerator=_config["accelerator"],
         devices=_config["devices"],
         num_nodes=_config["num_nodes"],
-        precision=_config["precision"],
+        precision=normalize_precision(_config["precision"]),
         strategy=strategy,
-        benchmark=True,
         max_epochs=1,
         logger=False,
         log_every_n_steps=0,

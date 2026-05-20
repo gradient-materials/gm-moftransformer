@@ -15,15 +15,15 @@ from moftransformer.modules.module import Module
 from moftransformer.utils.validation import (
     get_valid_config,
     get_num_devices,
+    get_trainer_strategy,
+    normalize_precision,
     ConfigurationError,
+    _IS_INTERACTIVE,
 )
 
 warnings.filterwarnings(
     "ignore", ".*Trying to infer the `batch_size` from an ambiguous collection.*"
 )
-
-
-_IS_INTERACTIVE = hasattr(sys, "ps1")
 
 
 def run(root_dataset, downstream=None, log_dir="logs/", *, test_only=False, **kwargs):
@@ -259,22 +259,15 @@ def main(_config):
 
     max_steps = _config["max_steps"] if _config["max_steps"] is not None else None
 
-    if _IS_INTERACTIVE:
-        strategy = None
-    elif pl.__version__ >= "2.0.0":
-        strategy = "ddp_find_unused_parameters_true"
-    else:
-        strategy = "ddp"
-
+    strategy = get_trainer_strategy(_IS_INTERACTIVE)
     log_every_n_steps = 10
 
     trainer = pl.Trainer(
         accelerator=_config["accelerator"],
         devices=_config["devices"],
         num_nodes=_config["num_nodes"],
-        precision=_config["precision"],
+        precision=normalize_precision(_config["precision"]),
         strategy=strategy,
-        benchmark=True,
         max_epochs=_config["max_epochs"],
         max_steps=max_steps,
         callbacks=callbacks,

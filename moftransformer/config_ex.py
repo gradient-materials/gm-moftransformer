@@ -97,7 +97,7 @@ def config():
         load_path = ""
 
     num_workers = 16  # the number of cpu's core
-    precision = 16
+    precision = "16-mixed"
 
     # normalization target
     mean = None

@@ -1,20 +1,16 @@
 # MOFTransformer version 2.2.0
 import sys
 import warnings
+import torch
 import pytorch_lightning as pl
 from moftransformer.database import (
     DEFAULT_PMTRANSFORMER_PATH,
     DEFAULT_MOFTRANSFORMER_PATH,
 )
 
-if pl.__version__ >= "2.0.0":
-    from pytorch_lightning.trainer.connectors.accelerator_connector import (
-        _AcceleratorConnector as AC,
-    )
-else:
-    from pytorch_lightning.trainer.connectors.accelerator_connector import (
-        AcceleratorConnector as AC,
-    )
+from pytorch_lightning.trainer.connectors.accelerator_connector import (
+    _AcceleratorConnector as AC,
+)
 
 
 _IS_INTERACTIVE = hasattr(sys, "ps1")
@@ -53,6 +49,31 @@ def _loss_names(d):
     }
     ret.update(d)
     return ret
+
+
+def resolve_accelerator(accelerator):
+    """Prefer GPU when CUDA is available and accelerator is auto."""
+    if accelerator in ("auto", None):
+        if torch.cuda.is_available():
+            return "gpu"
+        return "cpu"
+    return accelerator
+
+
+def normalize_precision(precision):
+    """Map legacy int precision flags to PyTorch Lightning 2.x strings."""
+    if precision in (16, "16"):
+        return "16-mixed"
+    if precision in (32, "32"):
+        return 32
+    return precision
+
+
+def get_trainer_strategy(is_interactive):
+    """DDP strategy for multi-device training (PyTorch Lightning 2.x)."""
+    if is_interactive:
+        return None
+    return "ddp_find_unused_parameters_true"
 
 
 def _set_load_path(path):
@@ -122,6 +143,8 @@ def _check_valid_num_gpus(_config):
 
 
 def get_valid_config(_config):
+    _config["accelerator"] = resolve_accelerator(_config.get("accelerator"))
+
     # set loss_name to dictionary
     _config["loss_names"] = _set_loss_names(_config["loss_names"])
 

@@ -87,7 +87,11 @@ class Module(LightningModule):
         hid_dim = config["hid_dim"]
 
         if config["load_path"] != "" and not config["test_only"]:
-            ckpt = torch.load(self.hparams.config["load_path"], map_location="cpu")
+            ckpt = torch.load(
+                self.hparams.config["load_path"],
+                map_location="cpu",
+                weights_only=False,
+            )
             state_dict = ckpt["state_dict"]
             self.load_state_dict(state_dict, strict=False)
             print(f"load model : {config['load_path']}")
@@ -109,7 +113,11 @@ class Module(LightningModule):
         # ===================== load downstream (test_only) ======================
 
         if config["load_path"] != "" and config["test_only"]:
-            ckpt = torch.load(config["load_path"], map_location="cpu")
+            ckpt = torch.load(
+                config["load_path"],
+                map_location="cpu",
+                weights_only=False,
+            )
             state_dict = ckpt["state_dict"]
             self.load_state_dict(state_dict, strict=False)
             print(f"load model : {config['load_path']}")
@@ -370,7 +378,4 @@ class Module(LightningModule):
                 "lr_scheduler_step must have metric and optimizer_idx(optional)"
             )
 
-        if pl.__version__ >= "2.0.0":
-            scheduler.step(epoch=self.current_epoch)
-        else:
-            scheduler.step()
+        scheduler.step(epoch=self.current_epoch)
