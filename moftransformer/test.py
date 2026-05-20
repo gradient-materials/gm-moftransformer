@@ -15,10 +15,13 @@ from moftransformer.modules.module import Module
 from moftransformer.utils.validation import (
     get_valid_config,
     get_num_devices,
-    get_trainer_strategy,
-    normalize_precision,
     ConfigurationError,
     _IS_INTERACTIVE,
+)
+from moftransformer.utils.runtime_compat import (
+    get_trainer_strategy,
+    normalize_precision,
+    trainer_uses_benchmark,
 )
 
 warnings.filterwarnings(
@@ -225,7 +228,7 @@ def main(_config):
 
     strategy = get_trainer_strategy(_IS_INTERACTIVE)
 
-    trainer = pl.Trainer(
+    trainer_kwargs = dict(
         accelerator=_config["accelerator"],
         devices=_config["devices"],
         num_nodes=_config["num_nodes"],
@@ -236,6 +239,10 @@ def main(_config):
         log_every_n_steps=0,
         deterministic=True,
     )
+    if trainer_uses_benchmark():
+        trainer_kwargs["benchmark"] = True
+
+    trainer = pl.Trainer(**trainer_kwargs)
 
     output = trainer.test(model, datamodule=dm)
 

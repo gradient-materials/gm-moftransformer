@@ -17,10 +17,13 @@ from moftransformer.modules.module_utils import set_task
 from moftransformer.utils.validation import (
     get_valid_config,
     get_num_devices,
-    get_trainer_strategy,
-    normalize_precision,
     ConfigurationError,
     _IS_INTERACTIVE,
+)
+from moftransformer.utils.runtime_compat import (
+    get_trainer_strategy,
+    normalize_precision,
+    trainer_uses_benchmark,
 )
 
 warnings.filterwarnings(
@@ -238,7 +241,7 @@ def main(_config):
 
     strategy = get_trainer_strategy(_IS_INTERACTIVE)
 
-    trainer = pl.Trainer(
+    trainer_kwargs = dict(
         accelerator=config["accelerator"],
         devices=config["devices"],
         num_nodes=config["num_nodes"],
@@ -249,6 +252,10 @@ def main(_config):
         deterministic=True,
         logger=False,
     )
+    if trainer_uses_benchmark():
+        trainer_kwargs["benchmark"] = True
+
+    trainer = pl.Trainer(**trainer_kwargs)
 
     # refine split
     split = config.get('split', 'all')

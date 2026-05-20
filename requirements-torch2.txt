@@ -1,5 +1,10 @@
-# Install PyTorch with CUDA 12.4 first, then the package:
+# PyTorch 2.x stack for Hopper / H200 (install torch wheel first, then this file)
 #   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
 #   pip install -r requirements-torch2.txt
 #   pip install -e .
 -r requirements.txt
+torch>=2.5.0,<2.7.0
+pytorch-lightning>=2.4.0,<2.6.0
+torchmetrics>=1.0.0,<2.0.0
+timm>=1.0.0,<2.0.0
+tensorboard>=2.9.0
