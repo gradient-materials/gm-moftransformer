@@ -1,11 +1,10 @@
-# MOFTransformer version 2.2.0
+# MOFTransformer version 2.2.0 — shared dependencies (no torch/lightning stack)
+# Install ONE stack first, then: pip install -e .
+#   requirements-torch1.txt  — legacy (torch 1.x, PL 1.7)
+#   requirements-torch2.txt  — Hopper / H200 (torch 2.x, PL 2.x)
 wget
-torch<2.0.0
-pytorch-lightning==1.7.0 # pytorch-lightning>=1.7.0
-numpy<2.0.0
-torchmetrics<1.0.0, >=0.6.0
-transformers<4.39.0, >=4.12.5
-timm>=0.4.12
+numpy>=1.26.0,<2.0.0
+transformers>=4.12.5,<4.47.0
 sacred>=0.8.2
 einops>=0.4.1
 ase>=3.22.1

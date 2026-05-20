@@ -10,6 +10,7 @@ from moftransformer.modules.cgcnn import GraphEmbeddings
 from moftransformer.modules.vision_transformer_3d import VisionTransformer3D
 
 from moftransformer.modules.module_utils import Normalizer
+from moftransformer.utils.runtime_compat import load_checkpoint, is_lightning_v2
 
 import numpy as np
 from sklearn.metrics import r2_score
@@ -87,7 +88,7 @@ class Module(LightningModule):
         hid_dim = config["hid_dim"]
 
         if config["load_path"] != "" and not config["test_only"]:
-            ckpt = torch.load(self.hparams.config["load_path"], map_location="cpu")
+            ckpt = load_checkpoint(self.hparams.config["load_path"], map_location="cpu")
             state_dict = ckpt["state_dict"]
             self.load_state_dict(state_dict, strict=False)
             print(f"load model : {config['load_path']}")
@@ -109,7 +110,7 @@ class Module(LightningModule):
         # ===================== load downstream (test_only) ======================
 
         if config["load_path"] != "" and config["test_only"]:
-            ckpt = torch.load(config["load_path"], map_location="cpu")
+            ckpt = load_checkpoint(config["load_path"], map_location="cpu")
             state_dict = ckpt["state_dict"]
             self.load_state_dict(state_dict, strict=False)
             print(f"load model : {config['load_path']}")
@@ -370,7 +371,7 @@ class Module(LightningModule):
                 "lr_scheduler_step must have metric and optimizer_idx(optional)"
             )
 
-        if pl.__version__ >= "2.0.0":
+        if is_lightning_v2():
             scheduler.step(epoch=self.current_epoch)
         else:
             scheduler.step()

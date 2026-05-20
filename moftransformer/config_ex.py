@@ -87,7 +87,7 @@ def config():
     log_dir = "logs/"
     batch_size = 1024  # desired batch size; for gradient accumulation
     per_gpu_batchsize = 8  # you should define this manually with per_gpu_batch_size
-    accelerator = "gpu"
+    accelerator = "auto"
     devices = 1
     num_nodes = 1
 

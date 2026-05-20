@@ -1,0 +1,10 @@
+# PyTorch 1.x stack (install torch wheel first, then this file)
+#   pip install torch==1.13.1+cu117 --index-url https://download.pytorch.org/whl/cu117
+#   pip install 'pip<24.1'
+#   pip install -r requirements-torch1.txt
+#   pip install -e .
+-r requirements.txt
+torch<2.0.0
+pytorch-lightning==1.7.0
+torchmetrics>=0.6.0,<1.0.0
+timm>=0.4.12,<1.0.0

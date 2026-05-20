@@ -68,3 +68,4 @@ transfer_learning/
 
 # .venv
 .venv/
+.venv-torch2/

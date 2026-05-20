@@ -1,13 +1,20 @@
 # MOFTransformer version 2.2.0
 import sys
 import warnings
-import pytorch_lightning as pl
+
 from moftransformer.database import (
     DEFAULT_PMTRANSFORMER_PATH,
     DEFAULT_MOFTRANSFORMER_PATH,
 )
+from moftransformer.utils.runtime_compat import (
+    is_lightning_v2,
+    normalize_precision,
+    get_trainer_strategy,
+    resolve_accelerator,
+    load_checkpoint,
+)
 
-if pl.__version__ >= "2.0.0":
+if is_lightning_v2():
     from pytorch_lightning.trainer.connectors.accelerator_connector import (
         _AcceleratorConnector as AC,
     )
@@ -122,6 +129,8 @@ def _check_valid_num_gpus(_config):
 
 
 def get_valid_config(_config):
+    _config["accelerator"] = resolve_accelerator(_config.get("accelerator"))
+
     # set loss_name to dictionary
     _config["loss_names"] = _set_loss_names(_config["loss_names"])
 

@@ -15,7 +15,15 @@ from moftransformer.datamodules.datamodule import Datamodule
 from moftransformer.modules.module import Module
 from moftransformer.modules.module_utils import set_task
 from moftransformer.utils.validation import (
-    get_valid_config, get_num_devices, ConfigurationError, _IS_INTERACTIVE
+    get_valid_config,
+    get_num_devices,
+    ConfigurationError,
+    _IS_INTERACTIVE,
+)
+from moftransformer.utils.runtime_compat import (
+    get_trainer_strategy,
+    normalize_precision,
+    trainer_uses_benchmark,
 )
 
 warnings.filterwarnings(
@@ -231,25 +239,23 @@ def main(_config):
     dm = Datamodule(config)
     model.eval()
 
-    if _IS_INTERACTIVE:
-        strategy = None
-    elif pl.__version__ >= '2.0.0':
-        strategy = "ddp_find_unused_parameters_true"
-    else:
-        strategy = "ddp"
+    strategy = get_trainer_strategy(_IS_INTERACTIVE)
 
-    trainer = pl.Trainer(
-        accelerator=config['accelerator'],
+    trainer_kwargs = dict(
+        accelerator=config["accelerator"],
         devices=config["devices"],
         num_nodes=config["num_nodes"],
-        precision=config["precision"],
+        precision=normalize_precision(config["precision"]),
         strategy=strategy,
-        benchmark=True,
         max_epochs=1,
         log_every_n_steps=0,
         deterministic=True,
         logger=False,
     )
+    if trainer_uses_benchmark():
+        trainer_kwargs["benchmark"] = True
+
+    trainer = pl.Trainer(**trainer_kwargs)
 
     # refine split
     split = config.get('split', 'all')

@@ -16,6 +16,12 @@ from moftransformer.utils.validation import (
     get_valid_config,
     get_num_devices,
     ConfigurationError,
+    _IS_INTERACTIVE,
+)
+from moftransformer.utils.runtime_compat import (
+    get_trainer_strategy,
+    normalize_precision,
+    trainer_uses_benchmark,
 )
 
 warnings.filterwarnings(
@@ -220,25 +226,23 @@ def main(_config):
     dm.setup('test')
     model.eval()
 
-    if _IS_INTERACTIVE:
-        strategy = None
-    elif pl.__version__ >= '2.0.0':
-        strategy = "ddp_find_unused_parameters_true"
-    else:
-        strategy = "ddp"
+    strategy = get_trainer_strategy(_IS_INTERACTIVE)
 
-    trainer = pl.Trainer(
+    trainer_kwargs = dict(
         accelerator=_config["accelerator"],
         devices=_config["devices"],
         num_nodes=_config["num_nodes"],
-        precision=_config["precision"],
+        precision=normalize_precision(_config["precision"]),
         strategy=strategy,
-        benchmark=True,
         max_epochs=1,
         logger=False,
         log_every_n_steps=0,
         deterministic=True,
     )
+    if trainer_uses_benchmark():
+        trainer_kwargs["benchmark"] = True
+
+    trainer = pl.Trainer(**trainer_kwargs)
 
     output = trainer.test(model, datamodule=dm)
 
